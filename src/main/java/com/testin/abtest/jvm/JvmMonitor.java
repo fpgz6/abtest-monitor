@@ -52,6 +52,7 @@ public class JvmMonitor implements Runnable {
         try {
             VmIdentifier vmid = new VmIdentifier("");
             MonitoredHost hostVm = MonitoredHost.getMonitoredHost(host);
+            hostVm.activeVms();
             MonitoredVm vm = hostVm.getMonitoredVm(vmid);
             OptionFinder finder = new OptionFinder(optionsSources());
         } catch (Exception e) {
