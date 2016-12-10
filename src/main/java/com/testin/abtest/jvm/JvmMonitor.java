@@ -12,10 +12,17 @@ import io.airlift.airline.Arguments;
 import io.airlift.airline.Command;
 import io.airlift.airline.Option;
 
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
+
+import sun.jvmstat.monitor.MonitoredHost;
+import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.VmIdentifier;
+import sun.tools.jstat.OptionFinder;
 
 /**
  * ClassName:JvmMonitor <br/>
@@ -26,12 +33,15 @@ import org.apache.kafka.clients.producer.ProducerConfig;
  * @since JDK 1.8
  * @see
  */
+@SuppressWarnings("restriction")
 @Command(name = "vm")
 public class JvmMonitor implements Runnable {
     @Option(name = { "-i", "--interval" })
     public Integer      interval = 1000;
     @Option(name = { "-b", "--brokers" })
     public String       brokers  = "localhost:9092";
+    @Option(name = { "-h", "--host" })
+    public String       host     = "//localhost";
     @Arguments
     public List<String> vmIds;
     private Properties  props    = new Properties();
@@ -39,6 +49,14 @@ public class JvmMonitor implements Runnable {
     @Override
     public void run() {
         init();
+        try {
+            VmIdentifier vmid = new VmIdentifier("");
+            MonitoredHost hostVm = MonitoredHost.getMonitoredHost(host);
+            MonitoredVm vm = hostVm.getMonitoredVm(vmid);
+            OptionFinder finder = new OptionFinder(optionsSources());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     private void init() {
@@ -58,5 +76,12 @@ public class JvmMonitor implements Runnable {
                   "org.apache.kafka.common.serialization.StringSerializer");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
                   "org.apache.kafka.common.serialization.StringSerializer");
+    }
+    
+    private List<URL> optionsSources() {
+        List<URL> sources = new ArrayList<URL>();
+        sources.add(Arguments.class.getResource("resources/jstat_options"));
+        sources.add(Arguments.class.getResource("resources/jstat_unsupported_options"));
+        return sources;
     }
 }
