@@ -22,6 +22,7 @@ import sun.tools.jstat.OptionFormat;
  * ClassName:JvmOption <br/>
  * Function: <br/>
  * Date: 2016年12月10日 下午5:57:40 <br/>
+ * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -53,6 +54,7 @@ public enum JvmOption {
     /**
      * getSpecialOption: <br/>
      * 获取指定Option的column的Map，带时间 <br>
+     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -70,6 +72,7 @@ public enum JvmOption {
     /**
      * getSpecialOption: <br/>
      * 获取指定Option的column的Map <br>
+     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -91,6 +94,7 @@ public enum JvmOption {
     /**
      * collectAllOptions: <br/>
      * 所有Options <br>
+     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -98,20 +102,29 @@ public enum JvmOption {
      * @return
      * @since JDK 1.8
      */
-    public Map<String, Object> collectAllOptions(OptionFinder finder,
-                                                 MonitoredVm vm,
-                                                 boolean useTimestamp) {
+    public static Map<String, Object> collectAllOptions(OptionFinder finder,
+                                                        MonitoredVm vm,
+                                                        boolean useTimestamp) {
         final Map<String, Object> all = new HashMap<String, Object>();
         Stream.of(JvmOption.values())
               .forEach(jo -> {
                   try {
-                      all.putAll(getSpecialOption(finder,
-                                                  vm,
-                                                  useTimestamp));
+                      all.putAll(jo.getSpecialOption(finder,
+                                                     vm,
+                                                     useTimestamp));
                   } catch (Exception e) {
                       // skip
                   }
               });
+        // 添加额外的元数据
+        all.put("sampleTime_date",
+                System.currentTimeMillis());
+        all.put("vmId_long",
+                vm.getVmIdentifier()
+                  .getLocalVmId());
+        all.put("vmHost_keyword",
+                vm.getVmIdentifier()
+                  .getHost());
         return all;
     }
     

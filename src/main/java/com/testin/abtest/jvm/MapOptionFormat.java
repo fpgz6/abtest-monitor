@@ -26,6 +26,7 @@ import com.testin.abtest.util.WhiteBox;
  * ClassName:MapOptionFormat <br/>
  * Function: <br/>
  * Date: 2016年12月10日 下午5:47:34 <br/>
+ * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -37,6 +38,13 @@ public class MapOptionFormat extends OptionFormat {
     protected HeaderClosure header;
     protected RowClosure    row;
     
+    /**
+     * Creates a new instance of MapOptionFormat.
+     * 
+     * @param name
+     * @param header
+     * @param row
+     */
     public MapOptionFormat(String name,
                            HeaderClosure header,
                            RowClosure row) {
@@ -48,6 +56,7 @@ public class MapOptionFormat extends OptionFormat {
     /**
      * pollAll: <br/>
      * 读取所有的column字段 <br>
+     * 
      * @author xushjie
      * @param format
      * @return

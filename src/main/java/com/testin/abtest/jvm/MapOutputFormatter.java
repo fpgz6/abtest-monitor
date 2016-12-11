@@ -20,6 +20,7 @@ import sun.tools.jstat.OptionOutputFormatter;
  * ClassName:MapOutputFormatter <br/>
  * Function: <br/>
  * Date: 2016年12月10日 下午5:49:57 <br/>
+ * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -31,6 +32,13 @@ public class MapOutputFormatter extends OptionOutputFormatter {
     private MonitoredVm  vm;
     private OptionFormat format;
     
+    /**
+     * Creates a new instance of MapOutputFormatter.
+     * 
+     * @param vm
+     * @param format
+     * @throws MonitorException
+     */
     public MapOutputFormatter(MonitoredVm vm,
                               OptionFormat format) throws MonitorException {
         // 构造父类，并完成resolve解析操作
@@ -43,6 +51,7 @@ public class MapOutputFormatter extends OptionOutputFormatter {
     /**
      * getMaps: <br/>
      * 解析当前vm的所有column值，构成一个Map <br>
+     * 
      * @author xushjie
      * @return
      * @since JDK 1.8

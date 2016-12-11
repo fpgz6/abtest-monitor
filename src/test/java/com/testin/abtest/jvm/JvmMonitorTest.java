@@ -56,6 +56,7 @@ import sun.tools.jstat.OptionOutputFormatter;
  * ClassName:JvmMonitorTest <br/>
  * Function: <br/>
  * Date: 2016年12月9日 下午3:15:36 <br/>
+ * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -67,6 +68,7 @@ public class JvmMonitorTest {
     /**
      * test1: <br/>
      * pid <br>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -87,6 +89,7 @@ public class JvmMonitorTest {
     /**
      * test2: <br/>
      * JMX <br>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -106,6 +109,7 @@ public class JvmMonitorTest {
     
     /**
      * test3: <br/>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -149,6 +153,7 @@ public class JvmMonitorTest {
     
     /**
      * test4: <br/>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -182,6 +187,7 @@ public class JvmMonitorTest {
     
     /**
      * test5: <br/>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -269,6 +275,13 @@ public class JvmMonitorTest {
     
     /**
      * test6: <br/>
+     * {gc_MC_double=176553984, gc_S1U_double=0, gc_GCT_double=581.6025861103216, gc_S0U_double=0,
+     * gc_S1C_double=7864320, gc_MU_double=164192624, gc_CCSU_double=19415520,
+     * gc_YGCT_double=9.607749133992547, gc_S0C_double=4194304,
+     * gc_Timestamp_double=55932.4881283232, gc_CCSC_double=23199744, gc_OU_double=254244544,
+     * gc_EU_double=173914336, gc_FGCT_double=571.994836976329, gc_OC_double=844103680,
+     * gc_EC_double=501743616, gc_YGC_double=928, gc_FGC_double=917} <br>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -277,8 +290,8 @@ public class JvmMonitorTest {
      */
     @Test
     public void test6() throws URISyntaxException, MonitorException, InterruptedException {
-        VmIdentifier vmid = new VmIdentifier("4748");
-        MonitoredHost host = MonitoredHost.getMonitoredHost(vmid);
+        MonitoredHost host = MonitoredHost.getMonitoredHost("//localhost");
+        VmIdentifier vmid = new VmIdentifier("//7636?mode=r");
         MonitoredVm vm = host.getMonitoredVm(vmid);
         OptionFinder finder = new OptionFinder(optionsSources());
         //
@@ -459,6 +472,7 @@ public class JvmMonitorTest {
     
     /**
      * test7: <br/>
+     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -498,6 +512,7 @@ public class JvmMonitorTest {
     
     /**
      * test8: <br/>
+     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -530,6 +545,7 @@ public class JvmMonitorTest {
     
     /**
      * test9: <br/>
+     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -565,6 +581,49 @@ public class JvmMonitorTest {
         }
     }
     
+    /**
+     * test10: <br/>
+     * 
+     * @author xushjie
+     * @throws URISyntaxException
+     * @throws MonitorException
+     * @throws InterruptedException
+     * @since JDK 1.8
+     */
+    @Test
+    public void test10() throws URISyntaxException, MonitorException, InterruptedException {
+        MonitoredHost host = MonitoredHost.getMonitoredHost("//localhost");
+        VmIdentifier vmid = new VmIdentifier("//9380?mode=r");
+        MonitoredVm vm1 = host.getMonitoredVm(vmid,
+                                              1000);
+        MonitoredVm vm2 = host.getMonitoredVm(vmid,
+                                              1000);
+        host.detach(vm2);
+        host.detach(vm1);
+        OptionFinder finder = new OptionFinder(optionsSources());
+        //
+        printSpecialOption(finder,
+                           vm1,
+                           "gc",
+                           true);
+        Thread.sleep(2000L);
+        printSpecialOption(finder,
+                           vm2,
+                           "gc",
+                           true);
+        Thread.sleep(2000L);
+        printSpecialOption(finder,
+                           vm1,
+                           "gc",
+                           true);
+        Thread.sleep(2000L);
+        printSpecialOption(finder,
+                           vm2,
+                           "gc",
+                           true);
+        host.detach(vm1);
+    }
+    
     public static void main(String[] args) throws InterruptedException {
         Object o = null;
         if (o instanceof String) {
@@ -572,9 +631,10 @@ public class JvmMonitorTest {
         } else {
             System.out.println("o is null");
         }
-        while (true) {
-            System.out.println("hello jvm");
-            Thread.sleep(5000L);
+        for (long i = 0; i < Long.MAX_VALUE; i++) {
+            if (i % 10 == 0) {
+                System.gc();
+            }
         }
     }
 }
