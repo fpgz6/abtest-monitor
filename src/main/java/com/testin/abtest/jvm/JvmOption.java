@@ -22,7 +22,6 @@ import sun.tools.jstat.OptionFormat;
  * ClassName:JvmOption <br/>
  * Function: <br/>
  * Date: 2016年12月10日 下午5:57:40 <br/>
- * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -54,7 +53,6 @@ public enum JvmOption {
     /**
      * getSpecialOption: <br/>
      * 获取指定Option的column的Map，带时间 <br>
-     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -72,7 +70,6 @@ public enum JvmOption {
     /**
      * getSpecialOption: <br/>
      * 获取指定Option的column的Map <br>
-     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -94,7 +91,6 @@ public enum JvmOption {
     /**
      * collectAllOptions: <br/>
      * 所有Options <br>
-     * 
      * @author xushjie
      * @param finder
      * @param vm
@@ -122,9 +118,6 @@ public enum JvmOption {
         all.put("vmId_long",
                 vm.getVmIdentifier()
                   .getLocalVmId());
-        all.put("vmHost_keyword",
-                vm.getVmIdentifier()
-                  .getHost());
         return all;
     }
     

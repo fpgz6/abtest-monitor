@@ -14,7 +14,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -37,7 +40,6 @@ import com.testin.abtest.util.KafkaV9Engine;
  * ClassName:JvmStatSampler <br/>
  * Function: <br/>
  * Date: <br/>
- * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -46,19 +48,19 @@ import com.testin.abtest.util.KafkaV9Engine;
 @SuppressWarnings("restriction")
 @Getter
 public class JvmStatSampler {
-    private static final Logger       log    = LoggerFactory.getLogger(JvmStatSampler.class);
-    private boolean                   active = false;
-    private ReentrantReadWriteLock    lock   = new ReentrantReadWriteLock();
+    private static final Logger       log       = LoggerFactory.getLogger(JvmStatSampler.class);
+    private volatile boolean          active    = false;
+    private ReentrantReadWriteLock    lock      = new ReentrantReadWriteLock();
     private ReadLock                  rlock;
     private WriteLock                 wlock;
     private OptionFinder              finder;
-    private Map<Integer, MonitoredVm> vmMaps = new HashMap<Integer, MonitoredVm>();
+    private Map<Integer, MonitoredVm> vmMaps    = new HashMap<Integer, MonitoredVm>();
     private String                    topic;
     private Integer                   interval;
+    private final ExecutorService     kafkaPool = Executors.newCachedThreadPool();
     
     /**
      * init: <br/>
-     * 
      * @author xushjie
      * @param vms
      * @param topic
@@ -68,7 +70,7 @@ public class JvmStatSampler {
     public void init(Map<Integer, MonitoredVm> vms,
                      String topic,
                      Integer interval) {
-        assert vms != null : "用于初始化JvmStatSampler采样器的vm列表不能为空!";
+        assert vms != null : "用于初始化JvmStatSampler采样器的vm列表不能为null!";
         if (!active) {
             finder = new OptionFinder(optionsSources());
             vmMaps.putAll(vms);
@@ -82,7 +84,6 @@ public class JvmStatSampler {
     
     /**
      * start: <br/>
-     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -94,7 +95,7 @@ public class JvmStatSampler {
             rlock.lock();
             try {
                 vmMaps.values()
-                      .parallelStream()
+                      .stream()
                       .forEach(vm -> {
                           Map<String, Object> all = JvmOption.collectAllOptions(finder,
                                                                                 vm,
@@ -109,7 +110,7 @@ public class JvmStatSampler {
             }
             // 采样后进行kafka的producer发送
             log.info("总共需要发送[" + records.size() + "]条采样记录。");
-            KafkaV9Engine.sendMessages(records);
+            kafkaPool.submit(() -> KafkaV9Engine.sendMessages(records));
             // 采样频率与MonitoredVm的采样频率一致，都是interval
             try {
                 Thread.sleep(interval);
@@ -121,7 +122,6 @@ public class JvmStatSampler {
     
     /**
      * stop: <br/>
-     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -131,7 +131,6 @@ public class JvmStatSampler {
     
     /**
      * offer: <br/>
-     * 
      * @author xushjie
      * @param vm
      * @return
@@ -146,7 +145,7 @@ public class JvmStatSampler {
                              .getLocalVmId(),
                            vm);
                 log.info("[" + vm.getVmIdentifier()
-                                 .getLocalVmId() + "]的vm被添加到监控列表。");
+                                 .getLocalVmId() + "]的vm被添加到监控列表，新增后当前监控列表：" + Objects.toString(vmMaps.keySet()));
                 return true;
             }
         } catch (Exception e) {
@@ -159,29 +158,30 @@ public class JvmStatSampler {
     
     /**
      * poll: <br/>
-     * 
      * @author xushjie
-     * @param vm
+     * @param vmId
+     * @return
      * @since JDK 1.8
      */
-    public void poll(MonitoredVm vm) {
+    public MonitoredVm poll(Integer vmId) {
         wlock.lock();
         try {
-            vmMaps.remove(vm.getVmIdentifier()
-                            .getLocalVmId());
-            log.info("[" + vm.getVmIdentifier()
-                             .getLocalVmId() + "]的vm被移出监控列表。");
+            MonitoredVm rm = vmMaps.remove(vmId);
+            if (rm != null) {
+                log.info("[" + vmId + "]的vm被移出监控列表，当前监控列表剩余vmId：" + Objects.toString(vmMaps.keySet()));
+            }
+            return rm;
         } catch (Exception e) {
             log.error("移除现有vm时出现异常：" + e);
         } finally {
             wlock.unlock();
         }
+        return null;
     }
     
     /**
      * optionsSources: <br/>
      * 加载option配置文件 <br>
-     * 
      * @author xushjie
      * @return
      * @since JDK 1.8

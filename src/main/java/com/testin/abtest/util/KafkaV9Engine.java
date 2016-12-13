@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
  * ClassName:KafkaV9Engine <br/>
  * Function: <br/>
  * Date: 2016年12月10日 下午6:19:45 <br/>
- * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -36,9 +35,7 @@ public class KafkaV9Engine {
     /**
      * sendMessages: <br/>
      * 发送一组消息 <br>
-     * 
      * @author xushjie
-     * @param props
      * @param messages
      * @since JDK 1.8
      */
@@ -60,7 +57,6 @@ public class KafkaV9Engine {
     /**
      * shutdown: <br/>
      * 关闭KafkaProducer <br>
-     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -90,7 +86,6 @@ public class KafkaV9Engine {
     /**
      * init: <br/>
      * 初始化kafka producer <br>
-     * 
      * @author xushjie
      * @param props
      * @since JDK 1.8

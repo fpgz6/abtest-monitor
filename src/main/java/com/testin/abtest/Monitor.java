@@ -27,6 +27,7 @@ public class Monitor {
     
     /**
      * main: <br/>
+     * 实例："jvm", "vm", "-i", "2000", "-b", "192.168.201.176:9092", "-t", "test8", "vmtest" <br>
      * @author xushjie
      * @param args
      * @since JDK 1.8

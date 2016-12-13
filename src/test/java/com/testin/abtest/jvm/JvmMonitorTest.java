@@ -29,6 +29,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.mail.Email;
+import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.SimpleEmail;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -43,6 +46,9 @@ import sun.jvmstat.monitor.MonitoredVmUtil;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
+import sun.jvmstat.monitor.event.VmEvent;
+import sun.jvmstat.monitor.event.VmListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 import sun.tools.jstat.Arguments;
 import sun.tools.jstat.ColumnFormat;
@@ -56,7 +62,6 @@ import sun.tools.jstat.OptionOutputFormatter;
  * ClassName:JvmMonitorTest <br/>
  * Function: <br/>
  * Date: 2016年12月9日 下午3:15:36 <br/>
- * 
  * @author xushjie
  * @version
  * @since JDK 1.8
@@ -68,7 +73,6 @@ public class JvmMonitorTest {
     /**
      * test1: <br/>
      * pid <br>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -89,7 +93,6 @@ public class JvmMonitorTest {
     /**
      * test2: <br/>
      * JMX <br>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -109,7 +112,6 @@ public class JvmMonitorTest {
     
     /**
      * test3: <br/>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -153,7 +155,6 @@ public class JvmMonitorTest {
     
     /**
      * test4: <br/>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -187,7 +188,6 @@ public class JvmMonitorTest {
     
     /**
      * test5: <br/>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -281,7 +281,6 @@ public class JvmMonitorTest {
      * gc_Timestamp_double=55932.4881283232, gc_CCSC_double=23199744, gc_OU_double=254244544,
      * gc_EU_double=173914336, gc_FGCT_double=571.994836976329, gc_OC_double=844103680,
      * gc_EC_double=501743616, gc_YGC_double=928, gc_FGC_double=917} <br>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -302,6 +301,16 @@ public class JvmMonitorTest {
         host.detach(vm);
     }
     
+    /**
+     * printSpecialOption: <br/>
+     * @author xushjie
+     * @param finder
+     * @param vm
+     * @param option
+     * @param useTimestamp
+     * @throws MonitorException
+     * @since JDK 1.8
+     */
     public static void printSpecialOption(OptionFinder finder,
                                           MonitoredVm vm,
                                           String option,
@@ -312,6 +321,29 @@ public class JvmMonitorTest {
                                                            format);
         Map<String, Object> maps = output.getMaps();
         System.out.println(Objects.toString(maps));
+    }
+    
+    /**
+     * pollSpecialOption: <br/>
+     * @author xushjie
+     * @param finder
+     * @param vm
+     * @param option
+     * @param useTimestamp
+     * @return
+     * @throws MonitorException
+     * @since JDK 1.8
+     */
+    public static String pollSpecialOption(OptionFinder finder,
+                                           MonitoredVm vm,
+                                           String option,
+                                           boolean useTimestamp) throws MonitorException {
+        OptionFormat format = finder.getOptionFormat(option,
+                                                     useTimestamp);
+        MapOutputFormatter output = new MapOutputFormatter(vm,
+                                                           format);
+        Map<String, Object> maps = output.getMaps();
+        return Objects.toString(maps);
     }
     
     public static class MapOutputFormatter extends OptionOutputFormatter {
@@ -472,7 +504,6 @@ public class JvmMonitorTest {
     
     /**
      * test7: <br/>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -512,7 +543,6 @@ public class JvmMonitorTest {
     
     /**
      * test8: <br/>
-     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -545,7 +575,6 @@ public class JvmMonitorTest {
     
     /**
      * test9: <br/>
-     * 
      * @author xushjie
      * @since JDK 1.8
      */
@@ -583,7 +612,6 @@ public class JvmMonitorTest {
     
     /**
      * test10: <br/>
-     * 
      * @author xushjie
      * @throws URISyntaxException
      * @throws MonitorException
@@ -624,6 +652,127 @@ public class JvmMonitorTest {
         host.detach(vm1);
     }
     
+    /**
+     * test11: <br/>
+     * @author xushjie
+     * @throws URISyntaxException
+     * @throws MonitorException
+     * @throws InterruptedException
+     * @since JDK 1.8
+     */
+    @Test
+    public void test11() throws URISyntaxException, MonitorException, InterruptedException {
+        OptionFinder finder = new OptionFinder(optionsSources());
+        MonitoredHost host = MonitoredHost.getMonitoredHost("//localhost");
+        host.addHostListener(new HostListener() {
+            @Override
+            public void disconnected(HostEvent event) {
+                System.out.println("HOST_DISCONNECTED: " + Objects.toString(event.getMonitoredHost()
+                                                                                 .getHostIdentifier()));
+            }
+            
+            @Override
+            public void vmStatusChanged(VmStatusChangeEvent event) {
+                System.out.println("HOST_VM_STATUS_CHANGED: " + Objects.toString(event.getActive()) + Objects.toString(event.getStarted()) + Objects.toString(event.getTerminated()));
+            }
+        });
+        VmIdentifier vmid = new VmIdentifier("//" + "3440" + "?mode=r");
+        MonitoredVm vm = host.getMonitoredVm(vmid,
+                                             2000);
+        VmIdentifier $vmid = new VmIdentifier("//" + "3440" + "?mode=r");
+        MonitoredVm $vm = host.getMonitoredVm($vmid,
+                                              2000);
+        VmListener vmListener = new VmListener() {
+            @Override
+            public void monitorStatusChanged(MonitorStatusChangeEvent event) {
+                System.out.println("VM_MONITOR_STATUS_CHANGED: " + Objects.toString(event.getMonitoredVm()
+                                                                                         .getVmIdentifier()));
+            }
+            
+            @Override
+            public void monitorsUpdated(VmEvent event) {
+                try {
+                    System.out.println("VM_MONITOR_UPDATED: " + pollSpecialOption(finder,
+                                                                                  vm,
+                                                                                  "gc",
+                                                                                  true));
+                } catch (MonitorException e) {
+                    e.printStackTrace();
+                }
+            }
+            
+            @Override
+            public void disconnected(VmEvent event) {
+                try {
+                    System.out.println("VM_DISCONNECTED: " + pollSpecialOption(finder,
+                                                                               vm,
+                                                                               "gc",
+                                                                               true));
+                } catch (MonitorException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        vm.addVmListener(vmListener);
+        $vm.addVmListener(vmListener);
+        Thread.sleep(1000L);
+        $vm.removeVmListener(vmListener);
+        host.detach($vm);
+        vm.removeVmListener(vmListener);
+        host.detach(vm);
+    }
+    
+    /**
+     * test12: <br/>
+     * @author xushjie
+     * @throws URISyntaxException
+     * @throws MonitorException
+     * @throws InterruptedException
+     * @throws EmailException
+     * @since JDK 1.8
+     */
+    @Test
+    public void test12() throws URISyntaxException, MonitorException, InterruptedException, EmailException {
+        OptionFinder finder = new OptionFinder(optionsSources());
+        MonitoredHost host = MonitoredHost.getMonitoredHost("//localhost");
+        VmIdentifier vmid = new VmIdentifier("//" + "1720" + "?mode=r");
+        MonitoredVm vm = host.getMonitoredVm(vmid,
+                                             2000);
+        host.detach(vm);
+        // Email email = new SimpleEmail();
+        // email.setHostName("mail.testin.cn");
+        // email.setSmtpPort(25);
+        // email.setAuthentication("xushengjie@testin.cn",
+        // "testin123");
+        // email.setSSLOnConnect(false);
+        // email.setStartTLSEnabled(true);
+        // email.setStartTLSRequired(true);
+        // email.setFrom("xushengjie@testin.cn");
+        // email.setSubject("TestMail");
+        // email.setMsg("This is a test mail ... :-)");
+        // email.addTo("xuzhijing@testin.cn");
+        // email.send();
+        Email email = new SimpleEmail();
+        email.setHostName("smtp.qq.com");
+        email.setSmtpPort(465);
+        email.setAuthentication("xsj2013@foxmail.com",
+                                "********");
+        email.setSSLOnConnect(true);
+        email.setFrom("xsj2013@foxmail.com");
+        email.setSubject("JVM_alert");
+        email.setMsg(MonitoredVmUtil.mainClass(vm,
+                                               true) + "\n" + MonitoredVmUtil.mainArgs(vm) + "\n" + MonitoredVmUtil.jvmArgs(vm) + "\n" + MonitoredVmUtil.jvmFlags(vm) + "\n" + MonitoredVmUtil.commandLine(vm));
+        email.addTo("xuzhijing@testin.cn");
+        email.send();
+    }
+    
+    /**
+     * main: <br/>
+     * @author xushjie
+     * @param args
+     * @throws InterruptedException
+     * @since JDK 1.8
+     */
     public static void main(String[] args) throws InterruptedException {
         Object o = null;
         if (o instanceof String) {
